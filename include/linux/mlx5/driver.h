@@ -765,6 +765,7 @@ struct mlx5_core_dev {
 	u32			issi;
 	struct mlx5e_resources  mlx5e_res;
 	struct mlx5_dm          *dm;
+	struct mlx5_dm_memic 	*dm_memic;
 	struct mlx5_vxlan       *vxlan;
 	struct mlx5_geneve      *geneve;
 	struct {
@@ -793,6 +794,16 @@ struct mlx5_db {
 	}			u;
 	dma_addr_t		dma;
 	int			index;
+};
+
+enum {
+	MLX5_MAX_MEMIC_PAGES = 0x100,
+	MLX5_MEMIC_ALLOC_SIZE_MASK = 0x3f,
+};
+
+enum {
+	MLX5_MEMIC_BASE_ALIGN	= 6,
+	MLX5_MEMIC_BASE_SIZE	= 1 << MLX5_MEMIC_BASE_ALIGN,
 };
 
 enum {
@@ -1157,6 +1168,8 @@ int mlx5_dm_sw_icm_alloc(struct mlx5_core_dev *dev, enum mlx5_sw_icm_type type,
 			 phys_addr_t *addr, u32 *obj_id);
 int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *dev, enum mlx5_sw_icm_type type,
 			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
+int mlx5_cmd_alloc_dm_memic(struct mlx5_dm_memic *dm, phys_addr_t *addr,
+				u64 length, u32 alignment);
 
 #ifdef CONFIG_MLX5_CORE_IPOIB
 struct net_device *mlx5_rdma_netdev_alloc(struct mlx5_core_dev *mdev,

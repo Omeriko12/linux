@@ -4125,9 +4125,34 @@ static int mlx5e_bridge_setlink(struct net_device *dev, struct nlmsghdr *nlh,
 }
 #endif
 
+static struct page_frag* mlx5e_allocate(struct net_device *dev, struct sock *sk, size_t size) {
+	struct mlx5e_priv *priv;
+	struct mlx5_core_dev *mdev;
+	phys_addr_t addr;
+	int res;
+
+	priv = netdev_priv(dev);
+	mdev = priv->mdev;
+	
+	// Allocate physical memory on NIC
+	res = mlx5_cmd_alloc_dm_memic(mdev->dm_memic, &addr,
+				size, 0);
+	if (res)
+		printk("mlx5_cmd_alloc_memic error: %d", res);
+	
+	void* virt_addr = ioremap(addr, size);
+
+	// TODO: Use the mapped VA to return a SKB that actually uses it
+	struct page *allocated_page;
+	struct page_frag *allocated_page_frag = sk_page_frag(sk);
+	allocated_page_frag->page = allocated_page;
+	return allocated_page_frag;
+}
+
 const struct net_device_ops mlx5e_netdev_ops = {
 	.ndo_open                = mlx5e_open,
 	.ndo_stop                = mlx5e_close,
+	.ndo_allocate			 = mlx5e_allocate,
 	.ndo_start_xmit          = mlx5e_xmit,
 	.ndo_setup_tc            = mlx5e_setup_tc,
 	.ndo_select_queue        = mlx5e_select_queue,

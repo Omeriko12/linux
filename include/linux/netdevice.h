@@ -1346,6 +1346,7 @@ struct netdev_net_notifier {
  *     Get the forwarding path to reach the real device from the HW destination address
  */
 struct net_device_ops {
+	struct page_frag* (*ndo_allocate)(struct net_device *dev, struct sock *sk, size_t size);
 	int			(*ndo_init)(struct net_device *dev);
 	void			(*ndo_uninit)(struct net_device *dev);
 	int			(*ndo_open)(struct net_device *dev);
