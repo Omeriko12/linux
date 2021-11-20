@@ -280,6 +280,7 @@
 #include <linux/uaccess.h>
 #include <asm/ioctls.h>
 #include <net/busy_poll.h>
+#include <net/nicmem.h>
 
 /* Track pending CMSGs. */
 enum {
@@ -1211,8 +1212,10 @@ int tcp_sendmsg_locked(struct sock *sk, struct msghdr *msg, size_t size)
 	int process_backlog = 0;
 	bool zc = false;
 	long timeo;
+	bool nicmem_alloc;
 
 	flags = msg->msg_flags;
+	nicmem_alloc = flags & MSG_NICMEM;
 
 	if (flags & MSG_ZEROCOPY && size && sock_flag(sk, SOCK_ZEROCOPY)) {
 		skb = tcp_write_queue_tail(sk);
@@ -1339,7 +1342,18 @@ new_segment:
 		} else if (!zc) {
 			bool merge = true;
 			int i = skb_shinfo(skb)->nr_frags;
-			struct page_frag *pfrag = sk_page_frag(sk);
+			struct page_frag *pfrag;
+
+			if (nicmem_alloc) {
+				// Find the device and call the allocate op
+				// This assumes the allocate op is initialized
+				struct net_device *netdev;
+				netdev = get_netdev_for_sock(sk);
+				pfrag = netdev->netdev_ops->ndo_allocate(netdev, sk, 64);
+			}
+			else {
+				pfrag = sk_page_frag(sk);
+			}
 
 			if (!sk_page_frag_refill(sk, pfrag))
 				goto wait_for_space;
