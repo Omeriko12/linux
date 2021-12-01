@@ -4135,13 +4135,13 @@ static struct page_frag* mlx5e_allocate(struct net_device *dev, struct sock *sk,
 	mdev = priv->mdev;
 	
 	// Allocate physical memory on NIC
-	res = mlx5_cmd_alloc_dm_memic(mdev->dm_memic, &addr,
-				size, 0);
+	res = mlx5_cmd_alloc_dm_memic(mdev->dm_memic, &addr, size, 0);
+	printk("Debug print: memic allocation succeed. Physical address recieved: %llx. \n", addr);
 	if (res)
 		printk("mlx5_cmd_alloc_memic error: %d", res);
 	
 	void* virt_addr = ioremap(addr, size);
-
+	printk("Debug print: ioremap succeed. Virtual address recieved: %llx. \n", virt_addr);
 	// TODO: Use the mapped VA to return a SKB that actually uses it
 	struct page *allocated_page;
 	struct page_frag *allocated_page_frag = sk_page_frag(sk);

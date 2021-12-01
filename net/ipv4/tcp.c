@@ -1345,6 +1345,7 @@ new_segment:
 			struct page_frag *pfrag;
 
 			if (nicmem_alloc) {
+				printk("Debug print: Recieved nicmem_alloc flag");
 				// Find the device and call the allocate op
 				// This assumes the allocate op is initialized
 				struct net_device *netdev;
